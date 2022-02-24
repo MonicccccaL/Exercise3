@@ -209,7 +209,7 @@ Trips %>%
   mutate(day = wday(sdate)) %>% 
   ggplot(aes(y = day)) +
   geom_bar() + #add number 1-7 on y-axis
-  labs(y = "Day (1 = Monday, 7 = Sunday)", 
+  labs(y = "Day (1 = Sunday, 7 = Saturday)", 
        x = "Number of Events",
        title = "Events vs Day of the Week") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
@@ -224,9 +224,9 @@ Trips %>%
   ggplot(aes(x = time)) +
   geom_density() +
   facet_wrap(vars(day), scales = "free_y")+
-  labs(x = "Time of Day (1 = Monday, 7 = Sunday)", y = "Density", 
+  labs(x = "Time of Day (1 = Sunday, 7 = Saturday)", y = "Density", 
        title = "Events vs Time of Day") +
-  theme_bw()
+  theme_bw() +
   theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
   
@@ -236,12 +236,15 @@ The variable `client` describes whether the renter is a regular user (level `Reg
   
 ```{r}
 Trips %>% 
-  mutate(time = hour(sdate) + minute(sdate)/60) %>% 
-  mutate(day = wday(sdate)) %>% 
-  ggplot(aes(x = time, fill = client)) +
-  geom_density(alpha = .5, color=NA) +
-  facet_wrap(vars(day), scales = "free_y")+
-  labs(x = "Time of Day (1 = Monday, 7 = Sunday)", y = "Density", 
+  mutate(time = hour(sdate) + minute(sdate)/60, 
+         day_on_week = wday(sdate, label=TRUE)) %>% 
+  ggplot(aes(x = time)) +
+  geom_density(aes(fill = client),
+               alpha = .5, 
+               color=NA) +
+  facet_wrap(vars(day_on_week))+
+  scale_fill_viridis_d()+
+  labs(x = "Time of Day (1 = Sunday, 7 = Saturday)", y = "Density", 
        title = "Events vs Time of Day", fill = "Client") +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
@@ -250,19 +253,55 @@ Trips %>%
   12. Change the previous graph by adding the argument `position = position_stack()` to `geom_density()`. In your opinion, is this better or worse in terms of telling a story? What are the advantages/disadvantages of each?
   
 ```{r}
-
+Trips %>% 
+  mutate(time = hour(sdate) + minute(sdate)/60) %>% 
+  mutate(day = wday(sdate)) %>% 
+  ggplot(aes(x = time, fill = client)) +
+  geom_density(alpha = .5, color=NA, position = position_stack()) +
+  facet_wrap(vars(day), scales = "free_y")+
+  scale_fill_viridis_d()+
+  labs(x = "Time of Day (1 = Sunday, 7 = Saturday)", y = "Density", 
+       title = "Events vs Time of Day", fill = "Client") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
   
   13. In this graph, go back to using the regular density plot (without `position = position_stack()`). Add a new variable to the dataset called `weekend` which will be "weekend" if the day is Saturday or Sunday and  "weekday" otherwise (HINT: use the `ifelse()` function and the `wday()` function from `lubridate`). Then, update the graph from the previous problem by faceting on the new `weekend` variable. 
   
 ```{r}
-
+Trips %>% 
+  mutate(time = hour(sdate) + minute(sdate)/60, 
+         day_on_week = wday(sdate), 
+         weekend = ifelse(day_on_week %in% c(1,7), "weekend", "weekday")) %>% 
+  ggplot(aes(x = time)) +
+  geom_density(aes(fill = client),
+               alpha = .5,
+               color=NA) +
+  facet_wrap(vars(weekend))+
+  scale_fill_viridis_d()+
+  labs(x = "Time of Day", y = "Density",
+       title = "Events vs Time of Day", fill = "Client") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
   
   14. Change the graph from the previous problem to facet on `client` and fill with `weekday`. What information does this graph tell you that the previous didn't? Is one graph better than the other?
   
 ```{r}
-
+Trips %>% 
+  mutate(time = hour(sdate) + minute(sdate)/60, 
+         day_on_week = wday(sdate), 
+         weekend = ifelse(day_on_week %in% c(1,7), "weekend", "weekday")) %>% 
+  ggplot(aes(x = time)) +
+  geom_density(aes(fill = weekend),
+               alpha = .5,
+               color=NA) +
+  facet_wrap(vars(client))+
+  scale_fill_viridis_d()+
+  labs(x = "Time of Day (1 = Sunday, 7 = Saturday)", y = "Density",
+       title = "Events vs Time of Day", fill = "Weekend") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
   
 ### Spatial patterns
@@ -270,14 +309,39 @@ Trips %>%
   15. Use the latitude and longitude variables in `Stations` to make a visualization of the total number of departures from each station in the `Trips` data. Use either color or size to show the variation in number of departures. We will improve this plot next week when we learn about maps!
   
 ```{r}
-
+Trips %>% 
+  group_by(sstation) %>% 
+  summarise(departure = n()) %>% 
+  full_join(Stations, by=c("sstation" = "name")) %>% 
+  ggplot(aes(x = lat, y = long, color = departure)) +
+  geom_point() +
+  labs(x = "Latitude", y = "Longitude", color = "Number of departures",
+       title = "Number of Departure from Each Stattion") +
+  theme_bw()+
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
   
   16. Only 14.4% of the trips in our data are carried out by casual users. Create a plot that shows which area(s) have stations with a much higher percentage of departures by casual users. What patterns do you notice? (Again, we'll improve this next week when we learn about maps).
   
 ```{r}
-
+Trips %>% 
+  group_by(sstation, client) %>% 
+  summarize(departure = n()) %>% 
+  full_join(Stations, by=c("sstation" = "name")) %>% 
+  mutate(num_dep = sum(departure)) %>% 
+  filter(client == "Casual") %>% 
+  ungroup(client) %>% 
+  mutate(prop = departure/num_dep) %>% 
+  select(sstation, lat, long, prop)%>%
+  ggplot(aes(x = lat, y = long, color = prop)) +
+  geom_point(shape = 19, alpha = .8) +
+  scale_color_viridis_b() +
+  labs(x = "Latitude", y = "Longitude", color = "proportion",
+       title = "Number of Departure from Each Stattion") +
+  theme_bw()+
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
+  Stations around area latitude 38.9, longitude -77.10 have a much higher percentage of departures by casual users. 
   
 **DID YOU REMEMBER TO GO BACK AND CHANGE THIS SET OF EXERCISES TO THE LARGER DATASET? IF NOT, DO THAT NOW.**
 
@@ -287,8 +351,20 @@ In this section, we'll use the data from 2022-02-01 Tidy Tuesday. If you didn't 
 
   17. The final product of this exercise will be a graph that has breed on the y-axis and the sum of the numeric ratings in the `breed_traits` dataset on the x-axis, with a dot for each rating. First, create a new dataset called `breed_traits_total` that has two variables -- `Breed` and `total_rating`. The `total_rating` variable is the sum of the numeric ratings in the `breed_traits` dataset (we'll use this dataset again in the next problem). Then, create the graph just described. Omit Breeds with a `total_rating` of 0 and order the Breeds from highest to lowest ranked. You may want to adjust the `fig.height` and `fig.width` arguments inside the code chunk options (eg. `{r, fig.height=8, fig.width=4}`) so you can see things more clearly - check this after you knit the file to assure it looks like what you expected.
 
-```{r}
-
+```{r, fig.height=9, fig.width=4}
+breed_traits_total <- breed_traits %>% 
+  select(-`Coat Type`, -`Coat Length`) %>% 
+  pivot_longer(!Breed, names_to = "traits", values_to = "rating") %>% 
+  group_by(Breed) %>% 
+  summarize(total_rating = sum(rating)) %>% 
+  filter(total_rating != 0) 
+breed_traits_total %>% 
+  ggplot(aes(x = total_rating, y = fct_reorder(Breed, total_rating)))+
+  geom_point()+
+  labs(x = "Total Rating", y = "Breed", 
+       title = "Total Rating for Each Dog Breed")+
+  theme_bw(base_size = 7) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
 
   18. The final product of this exercise will be a graph with the top-20 dogs in total ratings (from previous problem) on the y-axis, year on the x-axis, and points colored by each breed's ranking for that year (from the `breed_rank_all` dataset). The points within each breed will be connected by a line, and the breeds should be arranged from the highest median rank to lowest median rank ("highest" is actually the smallest numer, eg. 1 = best). After you're finished, think of AT LEAST one thing you could you do to make this graph better. HINTS: 1. Start with the `breed_rank_all` dataset and pivot it so year is a variable. 2. Use the `separate()` function to get year alone, and there's an extra argument in that function that can make it numeric. 3. For both datasets used, you'll need to `str_squish()` Breed before joining. 
