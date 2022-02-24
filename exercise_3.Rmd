@@ -181,25 +181,53 @@ It's natural to expect that bikes are rented more at some times of day, some day
   7. A density plot, which is a smoothed out histogram, of the events versus `sdate`. Use `geom_density()`.
   
 ```{r}
-
+Trips %>% 
+  ggplot(aes(x = sdate)) +
+  geom_density() +
+  labs(x = "Date", y = "Density", 
+       title = "Events vs sdate") + 
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
   
   8. A density plot of the events versus time of day.  You can use `mutate()` with `lubridate`'s  `hour()` and `minute()` functions to extract the hour of the day and minute within the hour from `sdate`. Hint: A minute is 1/60 of an hour, so create a variable where 3:30 is 3.5 and 3:45 is 3.75.
   
 ```{r}
-
+Trips %>% 
+  mutate(time = hour(sdate) + minute(sdate)/60) %>% 
+  ggplot(aes(x = time)) +
+  geom_density() +
+  labs(x = "Time of Day", y = "Density", 
+       title = "Events vs Time of Day") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
   
   9. A bar graph of the events versus day of the week. Put day on the y-axis.
   
 ```{r}
-
+Trips %>% 
+  mutate(day = wday(sdate)) %>% 
+  ggplot(aes(y = day)) +
+  geom_bar() + #add number 1-7 on y-axis
+  labs(y = "Day (1 = Monday, 7 = Sunday)", 
+       x = "Number of Events",
+       title = "Events vs Day of the Week") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
   
   10. Facet your graph from exercise 8. by day of the week. Is there a pattern?
   
 ```{r}
-
+Trips %>% 
+  mutate(time = hour(sdate) + minute(sdate)/60) %>% 
+  mutate(day = wday(sdate)) %>% 
+  ggplot(aes(x = time)) +
+  geom_density() +
+  facet_wrap(vars(day), scales = "free_y")+
+  labs(x = "Time of Day (1 = Monday, 7 = Sunday)", y = "Density", 
+       title = "Events vs Time of Day") +
+  theme_bw()
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
   
 The variable `client` describes whether the renter is a regular user (level `Registered`) or has not joined the bike-rental organization (`Causal`). The next set of exercises investigate whether these two different categories of users show different rental behavior and how `client` interacts with the patterns you found in the previous exercises. 
@@ -207,7 +235,16 @@ The variable `client` describes whether the renter is a regular user (level `Reg
   11. Change the graph from exercise 10 to set the `fill` aesthetic for `geom_density()` to the `client` variable. You should also set `alpha = .5` for transparency and `color=NA` to suppress the outline of the density function.
   
 ```{r}
-
+Trips %>% 
+  mutate(time = hour(sdate) + minute(sdate)/60) %>% 
+  mutate(day = wday(sdate)) %>% 
+  ggplot(aes(x = time, fill = client)) +
+  geom_density(alpha = .5, color=NA) +
+  facet_wrap(vars(day), scales = "free_y")+
+  labs(x = "Time of Day (1 = Monday, 7 = Sunday)", y = "Density", 
+       title = "Events vs Time of Day", fill = "Client") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
 
   12. Change the previous graph by adding the argument `position = position_stack()` to `geom_density()`. In your opinion, is this better or worse in terms of telling a story? What are the advantages/disadvantages of each?
