@@ -241,12 +241,7 @@ There are some missing data, which the data in garden_harvest does not match the
 
   3. I would like to understand how much money I "saved" by gardening, for each vegetable type. Describe how I could use the `garden_harvest` and `garden_spending` datasets, along with data from somewhere like [this](https://products.wholefoodsmarket.com/search?sort=relevance&store=10542) to answer this question. You can answer this in words, referencing various join functions. You don't need R code but could provide some if it's helpful.
 
-• Summarize the garden harvest data by vegetable and find how many pounds of each vegetable was harvested.
-• Summarize the garden spending data to find amount spent by vegetable type.
-• Join those summarized tables together,
-• Extract information from the website about how much each vegetable type costs per pound (this part would take some time).
-• Join the cost data to the already joined data. Figure out how much money would have been spent by multiplying total harvest
-in pounds by cost per pound info from website. Subtract off amount spent.
+We can using group_by vegetable to summarize garden_harvest data to find the weight of each vegetable. Then, summarize the garden_spending data by vegetable to find the price of each vegetable and the amount of spending. Join these two summarized dataset together. We can look for pricing information on the website, like wholefood, to find out how much each vegetable cost. Then, joining the data and information we found together. Finally, multiply cost with total harvest to find out the money we would spend, and then subtract the amount spent.
 
   4. Subset the data to tomatoes. Reorder the tomato varieties from smallest to largest first harvest date. Create a barplot of total harvest in pounds for each variety, in the new order.CHALLENGE: add the date near the end of the bar. (This is probably not a super useful graph because it's difficult to read. This is more an exercise in using some of the functions you just learned.)
 
@@ -360,7 +355,7 @@ It's natural to expect that bikes are rented more at some times of day, some day
 Trips %>% 
   ggplot(aes(x = sdate)) +
   geom_density() +
-  labs(x = "Date", y = "Density", 
+  labs(x = "Date", y = "", 
        title = "Events vs sdate") + 
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
@@ -376,7 +371,7 @@ Trips %>%
   mutate(time = hour(sdate) + minute(sdate)/60) %>% 
   ggplot(aes(x = time)) +
   geom_density() +
-  labs(x = "Time of Day", y = "Density", 
+  labs(x = "Time of Day", y = "", 
        title = "Events vs Time of Day") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
@@ -390,7 +385,7 @@ Trips %>%
 Trips %>% 
   mutate(day = wday(sdate)) %>% 
   ggplot(aes(y = day)) +
-  geom_bar() + #add number 1-7 on y-axis
+  geom_bar() + 
   labs(y = "Day (1 = Sunday, 7 = Saturday)", 
        x = "Number of Events",
        title = "Events vs Day of the Week") +
@@ -406,6 +401,7 @@ Trips %>%
 Trips %>% 
   mutate(time = hour(sdate) + minute(sdate)/60) %>% 
   mutate(day = wday(sdate)) %>% 
+#My computer system is in Chinese, so when I add "label = TRUE", it will turn out the day of the week in Chinese, and will leave blank on the graph. Thus, I will not keep the numbers. 
   ggplot(aes(x = time)) +
   geom_density() +
   facet_wrap(vars(day), scales = "free_y")+
@@ -425,7 +421,8 @@ The variable `client` describes whether the renter is a regular user (level `Reg
 ```r
 Trips %>% 
   mutate(time = hour(sdate) + minute(sdate)/60, 
-         day_on_week = wday(sdate)) %>% 
+         day_on_week = wday(sdate)) %>%
+#My computer system is in Chinese, so when I add "label = TRUE", it will turn out the day of the week in Chinese, and will leave blank on the graph. Thus, I will not keep the numbers.
   ggplot(aes(x = time)) +
   geom_density(aes(fill = client),
                alpha = .5, 
@@ -447,6 +444,7 @@ Trips %>%
 Trips %>% 
   mutate(time = hour(sdate) + minute(sdate)/60) %>% 
   mutate(day = wday(sdate)) %>% 
+#My computer system is in Chinese, so when I add "label = TRUE", it will turn out the day of the week in Chinese, and will leave blank on the graph. Thus, I will not keep the numbers.
   ggplot(aes(x = time, fill = client)) +
   geom_density(alpha = .5, color=NA, position = position_stack()) +
   facet_wrap(vars(day), scales = "free_y")+
@@ -458,6 +456,7 @@ Trips %>%
 ```
 
 ![](exercise_3_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+
 The previous graph shows the direct comparison of casual and registered. We can see which has the higher renting rate during the same period of time, but we cannot observe the overall trend from the diagram. This graph shows the overall trend of the renting, which the density of casual clients is adding on the top of the registered clients. In this graph, we cannot see the individual comparison between two client.
   
   13. In this graph, go back to using the regular density plot (without `position = position_stack()`). Add a new variable to the dataset called `weekend` which will be "weekend" if the day is Saturday or Sunday and  "weekday" otherwise (HINT: use the `ifelse()` function and the `wday()` function from `lubridate`). Then, update the graph from the previous problem by faceting on the new `weekend` variable. 
@@ -468,6 +467,7 @@ Trips %>%
   mutate(time = hour(sdate) + minute(sdate)/60, 
          day_on_week = wday(sdate), 
          weekend = ifelse(day_on_week %in% c(1,7), "weekend", "weekday")) %>% 
+
   ggplot(aes(x = time)) +
   geom_density(aes(fill = client),
                alpha = .5,
@@ -503,7 +503,8 @@ Trips %>%
 ```
 
 ![](exercise_3_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
-  The previous graph compares the clients in weekend and weekday. This graph compares the date of renting bikes for two different clients. One graph will not be better than the other, because these two graphs shows the two different types of information. 
+  
+The previous graph compares the clients in weekend and weekday. This graph compares the date of renting bikes for two different clients. One graph will not be better than the other, because these two graphs shows the two different types of information. 
   
 ### Spatial patterns
 
@@ -580,12 +581,12 @@ breed_traits_total <- breed_traits %>%
   filter(total_rating != 0) 
 breed_traits_total %>% 
   ggplot(aes(x = total_rating, y = fct_reorder(Breed, total_rating)))+
-  geom_point()+
+  geom_point(size = 2)+
   labs(x = "Total Rating", y = "Breed", 
        title = "Total Rating for Each Dog Breed")+
   theme_bw(base_size = 7) +
   theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
-        axis.title = element_text(size = 13))
+        axis.title = element_text(size = 11))
 ```
 
 ![](exercise_3_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
@@ -639,7 +640,7 @@ breed_rank_all1 %>%
   ggplot(aes(x = total_rating, y = fct_reorder(breed, total_rating)))+
   geom_point(aes(color = rank), shape = 18, size = 1.5)+
   scale_color_viridis_b() +
-  theme_bw(base_size = 7) +
+  theme_minimal(base_size = 8) +
   labs(x = "Total Rating", y = "Breed",
        title = "Total Rating for Top 30 Dogs") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
@@ -650,6 +651,8 @@ breed_rank_all1 %>%
 ## GitHub link
 
   20. Below, provide a link to your GitHub page with this set of Weekly Exercises. Specifically, if the name of the file is 03_exercises.Rmd, provide a link to the 03_exercises.md file, which is the one that will be most readable on GitHub.
+  
+  https://github.com/MonicccccaL/Exercise3
 
 ## Challenge problem! 
 
