@@ -102,7 +102,7 @@ garden_harvest %>%
             by = c("vegetable", "variety"))
 ```
 
-There are some missing data, which the data in garden_harvest does not match the garden_planting.
+Some varieties were planted in multiple plots, but when collecting the data, we do not get the data from lots of plots. So those vegetables planted in multiple plots may be counted multiple times. We should track the plots when collecting the data. We have to re-decide the weight distribution in each plot. And also, we will get a fewer rows when we do the left_join().
 
   3. I would like to understand how much money I "saved" by gardening, for each vegetable type. Describe how I could use the `garden_harvest` and `garden_spending` datasets, along with data from somewhere like [this](https://products.wholefoodsmarket.com/search?sort=relevance&store=10542) to answer this question. You can answer this in words, referencing various join functions. You don't need R code but could provide some if it's helpful.
 
@@ -129,10 +129,10 @@ garden_harvest %>%
 ```{r}
 garden_harvest %>% 
   mutate(lowercase_var = str_to_lower(variety)) %>% 
-  mutate(length_var_name = str_length(variety)) %>% 
-  group_by(vegetable, variety) %>% 
-  arrange(length_var_name) %>% 
-  distinct(variety) 
+  mutate(length_var_name = str_length(variety)) %>%
+  arrange(vegetable, length_var_name)%>%
+  distinct(vegetable, variety,.keep_all = TRUE)%>%
+  select(-vegetable, -weight, -units)
 ```
 
   6. In the `garden_harvest` data, find all distinct vegetable varieties that have "er" or "ar" in their name. HINT: `str_detect()` with an "or" statement (use the | for "or") and `distinct()`.
